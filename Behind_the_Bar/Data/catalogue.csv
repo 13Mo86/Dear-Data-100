@@ -1,0 +1,51 @@
+﻿Drink Name ,Category,Difficulty(1-5)
+Aperol Spritz,Cocktail,2
+Campari Spritz,Cocktail,2
+Espresso Martini,Cocktail,4
+Cosmopolitan,Cocktail,3
+Bramble,Cocktail,3
+Boulivardier,Cocktail,2
+Negroni,Cocktail,2
+Margarita,Cocktail,3
+Old Fashioned,Cocktail,2
+Whiskey Sour,Cocktail,5
+Amaretto Sour,Cocktail,5
+Long Island Iced Tea,Cocktail,3
+Gin & Tonic,Cocktail,2
+Campari Soda,Cocktail,2
+Americano,Cocktail,2
+Negroni Sbagliato,Cocktail,2
+Limoncello Spritz,Cocktail,2
+Rossini,Cocktail,2
+Rum &Coke,Cocktail,2
+Gin Martini,Cocktail,2
+Vodka Martini,Cocktail,2
+Dirty Gin Martini,Cocktail,3
+Dirty Vodka Martini,Cocktail,3
+Gin Martini On the Rocks,Cocktail,2
+Vodka Martini On the Rocks,Cocktail,2
+Margarita On the Rocks,Cocktail,3
+Red Wine,Wine,1
+White Wine,Wine,1
+Rose Wine,Wine,1
+Sparkling Wine,Wine,1
+Moretti,Beer,1
+Moretti Alcohol Free,Beer,1
+Peroni ,Beer,1
+Mojito,Cocktail ,4
+Bloody Mary,Cocktail,4
+Virgin Mojito,Mocktail,4
+Virgin Bloody Mary,Mocktail,4
+Summer Passion,Mocktail,3
+Home Sweet Home,Mocktail,3
+Coca Cola,Soft Drink,1
+Coke Zero,Soft Drink,1
+Diet Coke,Soft Drink,1
+Peach juice,Soft Drink,1
+Apple Juice,Soft Drink,1
+Orange Juice,Soft Drink,1
+Pineapple Juice,Soft Drink,1
+Cranberry Juice,Soft Drink,1
+Lemonade,Soft Drink,1
+Tonic Water,Soft Drink,1
+Soda Water,Soft Drink,1

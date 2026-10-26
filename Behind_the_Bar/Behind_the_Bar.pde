@@ -1,8 +1,14 @@
 Table drinks;
+Table catalogue;
 void setup() {
   size(900, 800);
   drinks = loadTable("Drinks.csv", "header");
+  catalogue = loadTable("catalogue.csv", "header");
+  println("Catalogue entries: " + catalogue.getRowCount());
   println("Rows loaded: " + drinks.getRowCount());
+
+  println("Aperol Spritz category: " + findCategory("Aperol Spritz"));
+
   noLoop();
 }
 
@@ -10,35 +16,63 @@ void draw() {
   background(145, 35, 30);
 
   // Colourful, overlapping brush marks
+
   int totalDrinks = 0;
+  int shiftIndex = 0;
 
   for (TableRow row : drinks.rows()) {
+
     for (int col = 2; col < drinks.getColumnCount(); col++) {
-      if (drinks.getColumnTitle(col).equals("Total Drinks")) {
+
+      String drinkName = drinks.getColumnTitle(col);
+
+      if (drinkName.equals("Total Drinks")) {
         break;
       }
 
-      totalDrinks += row.getInt(col);
+      int quantity = row.getInt(col);
+
+      if (quantity > 0) {
+
+        String category = findCategory(drinkName);
+        color drinkColour = categoryColour(category);
+
+        for (int i = 0; i < quantity; i++) {
+
+          
+
+          int column = shiftIndex % 5;
+          int line = shiftIndex / 5;
+
+          float regionWidth = width / 5.0;
+          float regionHeight = height / 2.0;
+
+          float x = column * regionWidth + random(regionWidth);
+          float y = line * regionHeight + random(regionHeight);
+          float w = random(15, 90);
+          float h = random(5, 30);
+
+          fill(drinkColour, 150);
+          noStroke();
+
+          pushMatrix();
+          translate(x, y);
+          rotate(random(TWO_PI));
+          ellipse(0, 0, w, h);
+          popMatrix();
+
+          
+          totalDrinks++;
+        }
+      }
     }
+
+    shiftIndex++;
   }
 
   println("Total drinks: " + totalDrinks);
 
-  for (int i = 0; i < totalDrinks; i++) {
-    float x = random(width);
-    float y = random(height);
-    float w = random(15, 90);
-    float h = random(5, 30);
 
-    fill(random(160, 255), random(40, 160), 20, 110);
-    noStroke();
-
-    pushMatrix();
-    translate(x, y);
-    rotate(random(TWO_PI));
-    ellipse(0, 0, w, h);
-    popMatrix();
-  }
 
   // Main spiral
   noFill();
@@ -56,4 +90,30 @@ void draw() {
   }
 
   endShape();
+}
+
+color categoryColour(String category) {
+  if (category.equalsIgnoreCase("Cocktail")) {
+    return color(235, 75, 30);
+  } else if (category.equalsIgnoreCase("Wine")) {
+    return color(110, 25, 65);
+  } else if (category.equalsIgnoreCase("Beer")) {
+    return color(245, 175, 35);
+  } else if (category.equalsIgnoreCase("Mocktail")) {
+    return color(65, 110, 85);
+  } else if (category.equalsIgnoreCase("Soft Drink")) {
+    return color(35, 65, 110);
+  }
+
+  return color(80, 80, 80);
+}
+
+String findCategory(String drinkName) {
+  for (TableRow row : catalogue.rows()) {
+    if (row.getString(0).trim().equalsIgnoreCase(drinkName.trim())) {
+      return row.getString(1).trim();
+    }
+  }
+
+  return "Unknown";
 }
