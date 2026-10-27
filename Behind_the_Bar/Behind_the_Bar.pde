@@ -9,18 +9,21 @@ void setup() {
 
   println("Aperol Spritz category: " + findCategory("Aperol Spritz"));
 
+
   noLoop();
 }
 
 void draw() {
   background(145, 35, 30);
-
+  randomSeed(86);
   // Colourful, overlapping brush marks
 
   int totalDrinks = 0;
   int shiftIndex = 0;
 
   for (TableRow row : drinks.rows()) {
+    int busyness = row.getInt(1);
+    println("Shift" + (shiftIndex + 1) + "busyness:" + busyness);
 
     for (int col = 2; col < drinks.getColumnCount(); col++) {
 
@@ -39,7 +42,7 @@ void draw() {
 
         for (int i = 0; i < quantity; i++) {
 
-          
+
 
           int column = shiftIndex % 5;
           int line = shiftIndex / 5;
@@ -49,19 +52,24 @@ void draw() {
 
           float x = column * regionWidth + random(regionWidth);
           float y = line * regionHeight + random(regionHeight);
-          float w = random(15, 90);
-          float h = random(5, 30);
+          float scale = min(regionWidth / 180.0, regionHeight / 400.0);
 
+          float maxWidth = map(busyness, 1, 5, 40, 120) * scale;
+          float maxHeight = map(busyness, 1, 5, 10, 45) * scale;
+
+          float w = random(15 * scale, maxWidth);
+          float h = random(5 * scale, maxHeight);
+          float rotationRange = map(busyness, 1, 5, 0.2, TWO_PI);
           fill(drinkColour, 150);
           noStroke();
 
           pushMatrix();
           translate(x, y);
-          rotate(random(TWO_PI));
+          rotate(random(-rotationRange/2, rotationRange/2));
           ellipse(0, 0, w, h);
           popMatrix();
 
-          
+
           totalDrinks++;
         }
       }
