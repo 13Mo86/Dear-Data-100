@@ -2,8 +2,6 @@
 Table drinks;
 Table catalogue;
 
-int preferredColumns = 5;
-
 void setup() {
   size(900, 800);
 
@@ -12,7 +10,6 @@ void setup() {
 
   println("Catalogue entries: " + catalogue.getRowCount());
   println("Rows loaded: " + drinks.getRowCount());
-  println("Aperol Spritz category: " + findCategory("Aperol Spritz"));
 
   noLoop();
 }
@@ -20,13 +17,12 @@ void setup() {
 void draw() {
   background(145, 35, 30);
   randomSeed(86);
+  noiseSeed(86);
 
   // Count completed shifts
   int shiftCount = 0;
 
   for (TableRow row : drinks.rows()) {
-    println("CSV row: " + row.getString(0)
-      + " | Total: " + row.getInt("Total Drinks"));
     String date = row.getString(0);
 
     if (date != null && !date.trim().isEmpty()
@@ -37,37 +33,42 @@ void draw() {
 
   // Automatically calculate the grid
   int columns = max(1, ceil(sqrt(shiftCount)));
-  int rows = max(1, ceil((float) shiftCount / columns));
+  int rows = max(1, ceil((float)shiftCount / columns));
 
-  float regionWidth = width / (float) columns;
-  float regionHeight = height / (float) rows;
+  float regionWidth = width / (float)columns;
+  float regionHeight = height / (float)rows;
 
   println("Completed shifts: " + shiftCount);
-  println("Grid: " + columns + " columns, " + rows + " rows");
+  println("Grid: " + columns + " x " + rows);
 
-  // Draw individual drinks
   int totalDrinks = 0;
   int shiftIndex = 0;
 
+  // Draw each completed shift
   for (TableRow row : drinks.rows()) {
 
-    // Skip empty shifts
-    if (row.getInt("Total Drinks") <= 0) {
+    String date = row.getString(0);
+    int shiftTotal = row.getInt("Total Drinks");
+
+    // Ignore empty rows and Excel totals
+    if (date == null || date.trim().isEmpty()
+      || shiftTotal <= 0) {
       continue;
     }
 
     int busyness = constrain(row.getInt(1), 1, 5);
 
-    println("Shift " + (shiftIndex + 1) + " busyness: " + busyness);
-
-    // Calculate this shift's position
     int column = shiftIndex % columns;
     int line = shiftIndex / columns;
 
     float regionX = column * regionWidth;
     float regionY = line * regionHeight;
 
-    // Go through each drink type
+    // Scale brushstrokes to fit the grid
+    float scale = min(regionWidth / 180.0,
+      regionHeight / 400.0);
+
+    // Draw individual drinks
     for (int col = 2; col < drinks.getColumnCount(); col++) {
 
       String drinkName = drinks.getColumnTitle(col);
@@ -78,76 +79,99 @@ void draw() {
 
       int quantity = row.getInt(col);
 
-      if (quantity > 0) {
+      if (quantity <= 0) {
+        continue;
+      }
 
-        String category = findCategory(drinkName);
-        color drinkColour = categoryColour(category);
+      String category = findCategory(drinkName);
+      color drinkColour = categoryColour(category);
 
-        // Draw one brushstroke for every drink sold
-        for (int i = 0; i < quantity; i++) {
+      for (int i = 0; i < quantity; i++) {
 
-          float x = regionX + random(regionWidth);
-          float y = regionY + random(regionHeight);
+        float x = regionX + random(regionWidth);
+        float y = regionY + random(regionHeight);
 
-          // Scale brushstrokes to fit the grid
-          float scale = min(
-            regionWidth / 180.0,
-            regionHeight / 400.0
-            );
+        // Busier shifts produce larger marks
+        float maxWidth = map(busyness, 1, 5, 40, 120) * scale;
+        float maxHeight = map(busyness, 1, 5, 10, 45) * scale;
 
-          // Busier shifts produce larger brushstrokes
-          float maxWidth = map(busyness, 1, 5, 40, 120) * scale;
-          float maxHeight = map(busyness, 1, 5, 10, 45) * scale;
+        float w = random(15 * scale, maxWidth);
+        float h = random(5 * scale, maxHeight);
 
-          float w = random(15 * scale, maxWidth);
-          float h = random(5 * scale, maxHeight);
+        // Busier shifts have more varied rotations
+        float rotationRange = map(busyness, 1, 5,
+          0.2, TWO_PI);
 
-          // Busier shifts have more varied rotations
-          float rotationRange = map(
-            busyness, 1, 5, 0.2, TWO_PI
-            );
+        fill(drinkColour, 150);
+        noStroke();
 
-          fill(drinkColour, 150);
-          noStroke();
+        pushMatrix();
+        translate(x, y);
+        rotate(random(-rotationRange / 2,
+          rotationRange / 2));
+        ellipse(0, 0, w, h);
+        popMatrix();
 
-          pushMatrix();
-          translate(x, y);
-          rotate(random(-rotationRange / 2, rotationRange / 2));
-          ellipse(0, 0, w, h);
-          popMatrix();
-
-          totalDrinks++;
-        }
+        totalDrinks++;
       }
     }
+
+    // Draw one spiral for this shift
+    float spiralX = regionX + regionWidth / 2;
+    float spiralY = regionY + regionHeight / 2;
+
+    drawSpiral(spiralX, spiralY, shiftTotal,
+      busyness, regionWidth, regionHeight);
+
+    println("Shift " + (shiftIndex + 1)
+      + " | Date: " + date
+      + " | Busyness: " + busyness
+      + " | Drinks: " + shiftTotal);
 
     shiftIndex++;
   }
 
-  println("Total drinks: " + totalDrinks);
+  println("Total drinks drawn: " + totalDrinks);
+}
 
-  // Main spiral
+
+// Draw a data-driven spiral
+void drawSpiral(float x, float y, int total,
+  int busyness, float regionWidth,
+  float regionHeight) {
+
+  // More drinks = larger spiral
+  float maxRadius = map(total, 0, 500, 5, 65);
+
+  // Keep spiral inside its region
+  float radiusLimit = min(regionWidth, regionHeight) * 0.38;
+  maxRadius = constrain(maxRadius, 5, radiusLimit);
+
+  // Busier shifts = more irregular spiral
+  float chaos = map(busyness, 1, 5, 1, 12);
+
   noFill();
-  stroke(25, 55, 65);
-  strokeWeight(7);
+  stroke(25, 55, 65, 170);
+  strokeWeight(2.5);
 
   beginShape();
 
   for (float a = 0; a < 5 * TWO_PI; a += 0.05) {
 
-    float r = 4 * a;
+    float r = map(a, 0, 5 * TWO_PI, 0, maxRadius);
 
-    float x = 330 + cos(a) * r
-      + map(noise(a * 0.5), 0, 1, -12, 12);
+    float px = x + cos(a) * r
+      + map(noise(a * 0.5 + x), 0, 1, -chaos, chaos);
 
-    float y = 370 + sin(a) * r
-      + map(noise(a * 0.5 + 100), 0, 1, -12, 12);
+    float py = y + sin(a) * r
+      + map(noise(a * 0.5 + y), 0, 1, -chaos, chaos);
 
-    vertex(x, y);
+    vertex(px, py);
   }
 
   endShape();
 }
+
 
 // Assign colours to drink categories
 color categoryColour(String category) {
@@ -167,12 +191,15 @@ color categoryColour(String category) {
   return color(80, 80, 80);
 }
 
+
 // Find the category of a drink
 String findCategory(String drinkName) {
 
   for (TableRow row : catalogue.rows()) {
 
-    if (row.getString(0).trim().equalsIgnoreCase(drinkName.trim())) {
+    if (row.getString(0).trim()
+      .equalsIgnoreCase(drinkName.trim())) {
+
       return row.getString(1).trim();
     }
   }
