@@ -1,13 +1,19 @@
+
 class ShiftSpiral {
 
   float x, y;
   float maxRadius;
   float chaos;
 
+  float rotation = 0;
+  float rotationSpeed;
+
   int total;
   int busyness;
 
   String date;
+
+  ArrayList<PVector> points = new ArrayList<PVector>();
 
   // Constructor
   ShiftSpiral(float x, float y,
@@ -33,7 +39,34 @@ class ShiftSpiral {
 
     // Busier shifts = more irregular spirals
     chaos = map(busyness, 1, 5, 1, 12);
+
+    // Busier shifts rotate faster
+    rotationSpeed = map(busyness, 1, 5, 0.01, 0.08);
+
+    createPoints();
   }
+
+
+  // Calculate the spiral shape once
+  void createPoints() {
+
+    for (float a = 0; a < 5 * TWO_PI; a += 0.05) {
+
+      float r = map(a, 0, 5 * TWO_PI,
+        0, maxRadius);
+
+      float px = cos(a) * r
+        + map(noise(a * 0.5 + x),
+        0, 1, -chaos, chaos);
+
+      float py = sin(a) * r
+        + map(noise(a * 0.5 + y),
+        0, 1, -chaos, chaos);
+
+      points.add(new PVector(px, py));
+    }
+  }
+
 
   // Draw the spiral
   void display() {
@@ -43,25 +76,66 @@ class ShiftSpiral {
     stroke(25, 55, 65, 170);
     strokeWeight(2.5);
 
+    pushMatrix();
+
+    translate(x, y);
+    rotate(rotation);
+
     beginShape();
 
-    for (float a = 0; a < 5 * TWO_PI; a += 0.05) {
-
-      float r = map(a, 0, 5 * TWO_PI,
-        0, maxRadius);
-
-      float px = x + cos(a) * r
-        + map(noise(a * 0.5 + x),
-        0, 1, -chaos, chaos);
-
-      float py = y + sin(a) * r
-        + map(noise(a * 0.5 + y),
-        0, 1, -chaos, chaos);
-
-      vertex(px, py);
+    for (PVector point : points) {
+      vertex(point.x, point.y);
     }
 
     endShape();
+
+    popMatrix();
+  }
+
+
+  // Update rotation
+  void update() {
+
+    rotation = (rotation + rotationSpeed) % TWO_PI;
+  }
+
+
+  // Check whether the mouse is near the spiral
+  boolean isHovered() {
+
+    float dx = mouseX - x;
+    float dy = mouseY - y;
+
+    if (dist(mouseX, mouseY, x, y) >
+      maxRadius + chaos * 2 + 4) {
+      return false;
+    }
+
+    float localX = dx * cos(rotation)
+      + dy * sin(rotation);
+
+    float localY = -dx * sin(rotation)
+      + dy * cos(rotation);
+
+    for (PVector point : points) {
+
+      if (dist(localX, localY, point.x, point.y) < 4) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+
+  // Display shift information
+  void showTooltip() {
+
+    drawTooltip(
+      "Shift: " + date
+      + "\nTotal drinks: " + total
+      + "\nBusyness: " + busyness + "/5"
+      );
   }
 }
 

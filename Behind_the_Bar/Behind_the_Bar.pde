@@ -1,3 +1,4 @@
+
 import java.util.ArrayList;
 
 Table drinks;
@@ -5,6 +6,9 @@ Table catalogue;
 
 ArrayList<DrinkMark> marks = new ArrayList<DrinkMark>();
 ArrayList<ShiftSpiral> spirals = new ArrayList<ShiftSpiral>();
+
+DrinkMark hoveredDrink;
+ShiftSpiral hoveredSpiral;
 
 void setup() {
   size(900, 800);
@@ -17,20 +21,65 @@ void setup() {
 
   createArtwork();
 
-  noLoop();
+  frameRate(60);
 }
 
 void draw() {
   background(145, 35, 30);
 
-  // Draw every individual drink
+  hoveredDrink = null;
+  hoveredSpiral = null;
+
+  // Find hovered spiral
+  for (int i = spirals.size() - 1; i >= 0; i--) {
+    ShiftSpiral spiral = spirals.get(i);
+
+    if (spiral.isHovered()) {
+      hoveredSpiral = spiral;
+      break;
+    }
+  }
+
+  // Find hovered drink
+  if (hoveredSpiral == null) {
+
+    for (int i = marks.size() - 1; i >= 0; i--) {
+      DrinkMark mark = marks.get(i);
+
+      if (mark.isHovered()) {
+        hoveredDrink = mark;
+        break;
+      }
+    }
+  }
+
+  // Draw and animate drinks
   for (DrinkMark mark : marks) {
+
+    if (mark == hoveredDrink) {
+      mark.update();
+    }
+
     mark.display();
   }
 
-  // Draw every shift spiral
+  // Draw and animate spirals
   for (ShiftSpiral spiral : spirals) {
+
+    if (spiral == hoveredSpiral) {
+      spiral.update();
+    }
+
     spiral.display();
+  }
+
+  // Display information above the artwork
+  if (hoveredDrink != null) {
+    hoveredDrink.showTooltip();
+  }
+
+  if (hoveredSpiral != null) {
+    hoveredSpiral.showTooltip();
   }
 }
 
@@ -41,7 +90,6 @@ void createArtwork() {
 
   int shiftCount = 0;
 
-  // Count completed shifts
   for (TableRow row : drinks.rows()) {
 
     String date = row.getString(0);
@@ -85,7 +133,7 @@ void createArtwork() {
     float scale = min(regionWidth / 180.0,
       regionHeight / 400.0);
 
-    // Create one DrinkMark per drink sold
+    // Create one object per individual drink
     for (int col = 2; col < drinks.getColumnCount(); col++) {
 
       String drinkName = drinks.getColumnTitle(col);
@@ -131,7 +179,7 @@ void createArtwork() {
       }
     }
 
-    // Create one spiral for each shift
+    // Create one spiral per shift
     float spiralX = regionX + regionWidth / 2;
     float spiralY = regionY + regionHeight / 2;
 
@@ -153,4 +201,47 @@ void createArtwork() {
 
   println("Completed shifts: " + shiftCount);
   println("Total drinks drawn: " + totalDrinks);
+}
+
+
+// DISPLAY TOOLTIP
+
+void drawTooltip(String information) {
+
+  pushStyle();
+
+  textSize(13);
+  textAlign(LEFT, TOP);
+
+  String[] lines = split(information, '\n');
+
+  float boxWidth = 0;
+
+  for (String line : lines) {
+    boxWidth = max(boxWidth, textWidth(line));
+  }
+
+  boxWidth += 24;
+
+  float boxHeight = lines.length * 19 + 20;
+
+  float boxX = constrain(mouseX + 15,
+    5, max(5, width - boxWidth - 5));
+
+  float boxY = constrain(mouseY + 15,
+    5, max(5, height - boxHeight - 5));
+
+  noStroke();
+  fill(20, 230);
+
+  rectMode(CORNER);
+  rect(boxX, boxY, boxWidth, boxHeight, 6);
+
+  fill(255);
+
+  for (int i = 0; i < lines.length; i++) {
+    text(lines[i], boxX + 12, boxY + 10 + i * 19);
+  }
+
+  popStyle();
 }
